@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EVE Online Omega 成本計算機</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #fff; color: #202020; font: 15px/1.6 system-ui, -apple-system, "Microsoft JhengHei", sans-serif; }
+      main { max-width: 940px; margin: auto; padding: 40px 24px; }
+      header, .line { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+      header { border-bottom: 2px solid #222; padding-bottom: 20px; }
+      h1 { margin: 0; font-size: clamp(23px, 4vw, 36px); line-height: 1.2; }
+      h2 { margin: 0 0 16px; font-size: 18px; }
+      h3 { margin: 0 0 10px; font-size: 15px; }
+      p { margin: 8px 0; color: #666; }
+      small, .muted { color: #666; }
+      section { margin: 28px 0; }
+      button, select, input { border-radius: 0; font: inherit; }
+      button, select { border: 1px solid #aaa; background: #fff; color: #222; padding: 9px 14px; }
+      button { cursor: pointer; }
+      button:hover { background: #eee; }
+      button.active { border-color: #222; background: #222; color: #fff; }
+      button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #555; outline-offset: 3px; }
+      .segments { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+      .segments button + button { border-left: 0; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .panel { min-width: 0; border: 1px solid #ccc; padding: 20px; }
+      label { display: block; margin: 15px 0 4px; }
+      input[type="range"] { width: 100%; margin: 8px 0 16px; accent-color: #222; }
+      select { width: 100%; }
+      .big { overflow-wrap: anywhere; font-size: 32px; font-weight: 650; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+      .bar { height: 7px; margin-top: 12px; background: #eee; }
+      .bar div { height: 100%; background: #555; }
+      .result { border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 20px 0; text-align: center; }
+      .details .line { border-bottom: 1px solid #eee; padding: 10px 0; }
+      .details strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+      .tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+      th, td { border-bottom: 1px solid #ddd; padding: 9px 6px; text-align: left; }
+      th:last-child, td:last-child { text-align: right; }
+      th { background: #f5f5f5; font-size: 13px; }
+      footer { border-top: 1px solid #ccc; padding-top: 18px; color: #666; font-size: 13px; }
+      a { color: #333; }
+
+      @media (max-width: 650px) {
+        main { padding: 22px 16px; }
+        .grid, .tables { grid-template-columns: 1fr; }
+        .panel { padding: 16px; }
+        header { align-items: flex-start; }
+        .segments button { padding: 9px 3px; }
+        .big { font-size: 29px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div><h1 data-t="title"></h1></div>
+        <button id="lang" type="button">English</button>
+      </header>
+      <section>
+        <h2 data-t="duration"></h2>
+        <div class="segments" id="dur"></div>
+      </section>
+      <section class="grid">
+        <div class="panel">
+          <h2 data-t="direct"></h2>
+          <label for="dd" class="line"><span data-t="directDisc"></span><strong id="ddv"></strong></label>
+          <input id="dd" type="range" min="0" max="50" step="1" value="25">
+          <p data-t="total"></p>
+          <div class="big" id="directTotal"></div>
+        </div>
+        <div class="panel">
+          <h2 data-t="plex"></h2>
+          <label for="pack" data-t="pack"></label>
+          <select id="pack"></select>
+          <label for="pd" class="line"><span data-t="plexDisc"></span><strong id="pdv"></strong></label>
+          <input id="pd" type="range" min="0" max="50" step="1" value="25">
+          <label for="nd" class="line"><span data-t="nesDisc"></span><strong id="ndv"></strong></label>
+          <input id="nd" type="range" min="0" max="50" step="1" value="25">
+        </div>
+      </section>
+      <section>
+        <h2 data-t="monthly"></h2>
+        <div class="grid">
+          <div class="panel"><h3 data-t="direct"></h3><div class="big" id="dm"></div><small data-t="perMonth"></small><div class="bar"><div id="db"></div></div></div>
+          <div class="panel"><h3 data-t="plex"></h3><div class="big" id="pm"></div><small data-t="perMonth"></small><div class="bar"><div id="pb"></div></div></div>
+        </div>
+      </section>
+      <section class="result" aria-live="polite"><div id="winner"></div><div class="big" id="saving"></div><div id="savingCash"></div></section>
+      <section class="details"><h2 data-t="details"></h2><div id="detailRows"></div><p data-t="note"></p><div class="actions"><button id="reset" data-t="reset"></button></div></section>
+      <section><h2 data-t="reference"></h2><div class="tables" id="tables"></div></section>
+      <footer>
+        <span data-t="footer"></span>
+        <p>This material is used with limited permission of CCP Games. No official affiliation or endorsement by CCP Games is stated or implied. CCP Games is now Fenris Creations.</p>
+      </footer>
+    </main>
+    <script>
+      const plans = { 1: [500, 20], 3: [1200, 48], 6: [2100, 84], 12: [3600, 144], 24: [6600, 264] };
+      const packs = { 1000: 45, 1500: 65, 3000: 125, 6000: 240, 12000: 420, 20000: 650 };
+      const dict = {
+        zh: { title: "EVE Online Omega 成本計算機", duration: "想獲得的 Omega 時長", direct: "直接購買 Omega", plex: "PLEX 兌換 Omega", directDisc: "官網 Omega 折扣", plexDisc: "官網 PLEX 折扣", nesDisc: "NES Omega 額外折扣", pack: "PLEX 購買面額", total: "Omega 總成本", monthly: "每月實際成本", perMonth: "每月", details: "PLEX 購買明細", need: "所需 PLEX", count: "需購買包數", cash: "實際刷卡金額", effective: "Omega 消耗成本", left: "剩餘 PLEX", note: "消耗成本按 PLEX 平均單價計算，剩餘 PLEX 仍有價值；假設從零庫存開始，未含稅費。", reset: "重設", reference: "原價參考表", storeOmega: "官網 Omega", storePlex: "官網 PLEX", nesOmega: "NES Omega", term: "時長", price: "原價 (USD)", month: "個月", footer: "非官方玩家工具 · 非即時報價", wins: "較划算", equal: "兩種方式成本相同", save: "節省", over: "個月合計", quantity: "數量", off: "% 折扣" },
+        en: { title: "EVE Online Omega Calculator", duration: "Desired Omega duration", direct: "Direct Omega", plex: "PLEX to Omega", directDisc: "Store Omega discount", plexDisc: "Store PLEX discount", nesDisc: "Additional NES Omega discount", pack: "PLEX pack", total: "Total Omega cost", monthly: "Effective monthly cost", perMonth: "per month", details: "PLEX purchase breakdown", need: "PLEX required", count: "Packs required", cash: "Actual cash payment", effective: "Effective Omega cost", left: "Remaining PLEX", note: "Effective cost uses the average PLEX unit price. Remaining PLEX retains value. Assumes zero starting balance; excludes taxes and fees.", reset: "Reset", reference: "Base price reference", storeOmega: "Store Omega", storePlex: "Store PLEX", nesOmega: "NES Omega", term: "Duration", price: "Price (USD)", month: "months", footer: "Unofficial fan tool · Not live pricing", wins: "is cheaper", equal: "Both strategies cost the same", save: "Save", over: "months total", quantity: "Quantity", off: "% OFF" }
+      };
+      let lang = "zh";
+      let months = 24;
+      const $ = (id) => document.getElementById(id);
+      const t = (key) => dict[lang][key];
+      const usd = (number) => `${number.toLocaleString("en-US", { style: "currency", currency: "USD" })} USD`;
+      const num = (number) => number.toLocaleString("en-US");
+
+      function update() {
+        const pack = +$("pack").value;
+        const directDiscount = +$("dd").value;
+        const plexDiscount = +$("pd").value;
+        const nesDiscount = +$("nd").value;
+        [["dd", directDiscount], ["pd", plexDiscount], ["nd", nesDiscount]].forEach(([id, value]) => { $(id + "v").textContent = `${value}${t("off")}`; });
+        const need = Math.ceil(plans[months][0] * (100 - nesDiscount) / 100);
+        const packPrice = packs[pack] * (100 - plexDiscount) / 100;
+        const direct = plans[months][1] * (100 - directDiscount) / 100;
+        const indirect = need * packPrice / pack;
+        const count = Math.ceil(need / pack);
+        const cash = count * packPrice;
+        const left = count * pack - need;
+        const delta = Math.abs(direct - indirect);
+        const max = Math.max(direct, indirect);
+        $("directTotal").textContent = usd(direct);
+        $("dm").textContent = usd(direct / months);
+        $("pm").textContent = usd(indirect / months);
+        $("db").style.width = `${100 * direct / max}%`;
+        $("pb").style.width = `${100 * indirect / max}%`;
+        $("winner").textContent = delta < 0.000001 ? t("equal") : `${direct < indirect ? t("direct") : t("plex")} ${t("wins")}`;
+        $("saving").textContent = `${(100 * delta / max).toFixed(1)}%`;
+        $("savingCash").textContent = `${t("save")} ${usd(delta)} · ${months} ${t("over")}`;
+        const rows = [["need", num(need)], ["count", num(count)], ["cash", usd(cash)], ["effective", usd(indirect)], ["left", num(left)]];
+        $("detailRows").innerHTML = rows.map(([key, value]) => `<div class="line"><span>${t(key)}</span><strong>${value}</strong></div>`).join("");
+      }
+
+      function createTable(title, firstHeader, secondHeader, rows) {
+        return `<div><h3>${title}</h3><table><thead><tr><th scope="col">${firstHeader}</th><th scope="col">${secondHeader}</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`).join("")}</tbody></table></div>`;
+      }
+
+      function render() {
+        document.title = t("title");
+        document.documentElement.lang = lang === "zh" ? "zh-Hant" : "en";
+        $("lang").textContent = lang === "zh" ? "English" : "繁體中文";
+        document.querySelectorAll("[data-t]").forEach((element) => { element.textContent = t(element.dataset.t); });
+        $("dur").innerHTML = Object.keys(plans).map((month) => `<button type="button" data-m="${month}" aria-pressed="${+month === months}" class="${+month === months ? "active" : ""}">${month}${lang === "zh" ? " 月" : "M"}</button>`).join("");
+        $("dur").querySelectorAll("button").forEach((button) => { button.onclick = () => { months = +button.dataset.m; render(); }; });
+        $("tables").innerHTML = createTable(t("storeOmega"), t("term"), t("price"), Object.entries(plans).map(([month, value]) => [`${month} ${t("month")}`, usd(value[1]).replace(" USD", "")])) + createTable(t("storePlex"), t("quantity"), t("price"), Object.entries(packs).map(([amount, price]) => [num(+amount), usd(price).replace(" USD", "")])) + createTable(t("nesOmega"), t("term"), "PLEX", Object.entries(plans).map(([month, value]) => [`${month} ${t("month")}`, num(value[0])]));
+        update();
+      }
+
+      $("pack").innerHTML = Object.keys(packs).map((amount) => `<option value="${amount}">${num(+amount)} PLEX</option>`).join("");
+      $("pack").value = "6000";
+      ["pack", "dd", "pd", "nd"].forEach((id) => $(id).addEventListener("input", update));
+      $("lang").onclick = () => { lang = lang === "zh" ? "en" : "zh"; render(); };
+      $("reset").onclick = () => { months = 24; $("pack").value = "6000"; ["dd", "pd", "nd"].forEach((id) => { $(id).value = 25; }); render(); };
+      render();
+    </script>
+  </body>
+</html>
